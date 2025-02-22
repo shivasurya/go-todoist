@@ -23,7 +23,7 @@ type Model struct {
 
 func NewModel() Model {
 	s := spinner.New()
-	s.Spinner = spinner.Monkey
+	s.Spinner = spinner.Globe
 	s.Style = spinnerStyle
 
 	return Model{
