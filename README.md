@@ -1,7 +1,6 @@
 # 📝 Golang ToDoist Client App with Bubble Tea UI 🫧
 
-<img height="32" width="32" src="https://cdn.simpleicons.org/todoist" />
-<img height="32" width="32" src="https://cdn.simpleicons.org/go" />
+<img height="32" width="32" src="https://cdn.simpleicons.org/todoist" /> <img height="32" width="32" src="https://cdn.simpleicons.org/go" />
 
 </br>
 
