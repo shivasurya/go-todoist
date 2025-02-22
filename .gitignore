@@ -1,0 +1,31 @@
+# Binaries and build output
+bin/
+dist/
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Environment files
+.env
+.env.local
+
+# Debug files
+debug/
+
+# Test coverage
+coverage.txt
+coverage.html
