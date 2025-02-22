@@ -12,20 +12,18 @@ A delightful terminal-based Todoist client built with Go and the charming Bubble
 
 ## 🚀 Installation
 
-go get github.com/shivasurya/go-todoist
-
+go install github.com/shivasurya/go-todoist/cmd/todoist@latest
 
 ## 🎮 Usage
 
 1. Launch the application:
 
-go-todoist
+`todoist` should be available in your $GOPATH/bin directory.
 
 2. Navigate using these keyboard shortcuts:
 - `j/k` or `↑/↓`: Navigate tasks
-- `space`: Toggle completion
+- `space`: Choose task
 - `q`: Quit application
-- `enter`: Edit task
 
 ## 🛠️ Development
 
@@ -35,9 +33,12 @@ Requirements:
 
 Build from source:
 
-git clone https://github.com/shivasurya/go-todoist
-cd todoist-tui
-go build -o todo cmd/todoist/main.go
+- git clone https://github.com/shivasurya/go-todoist
+- cd todoist-tui
+- export TODOIST_TOKEN=your_api_key
+- go build -o todo cmd/todoist/main.go
+
+Ensure you have a valid Todoist API key in your environment variable as TODOIST_TOKEN.
 
 ## 📄 License
 
