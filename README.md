@@ -1,5 +1,10 @@
 # 📝 Golang ToDoist Client App with Bubble Tea UI 🫧
 
+<img height="32" width="32" src="https://cdn.simpleicons.org/todoist" />
+<img height="32" width="32" src="https://cdn.simpleicons.org/go" />
+
+</br>
+
 🚧 **This project is a work in progress.** 🚧
 
 A delightful terminal-based Todoist client built with Go and the charming Bubble Tea framework.
