@@ -26,7 +26,9 @@ go install github.com/shivasurya/go-todoist/cmd/todoist@latest
 
 2. Navigate using these keyboard shortcuts:
 - `j/k` or `↑/↓`: Navigate tasks
-- `space`: Choose task
+- `space`: Toggle task completion status
+- `c`: Mark task as complete
+- `?`: Show help menu
 - `q`: Quit application
 
 ## 🛠️ Development

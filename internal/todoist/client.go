@@ -2,7 +2,8 @@ package todoist
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -63,7 +64,28 @@ func (c *Client) makeGetRequest(feature string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
+}
+
+func (c *Client) CompleteTask(taskID string) error {
+	url := c.resolveFeatureURL("tasks/" + taskID + "/close")
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.config.Token)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("server returned status code %d", resp.StatusCode)
+	}
+
+	return nil
 }
 
 func (c *Client) resolveFeatureURL(feature string) string {
