@@ -62,6 +62,8 @@ func (m Model) View() string {
 		helpView += " • k/↑: Move cursor up\n"
 		helpView += " • c: Mark task as complete\n"
 		helpView += " • Space: Toggle task completion status\n"
+		helpView += " • n: Create new task\n"
+		helpView += " • r: Refresh tasks\n"
 		helpView += " • Enter: Select task\n"
 		helpView += " • q/Ctrl+C: Quit\n"
 		helpView += " • ?: Toggle this help menu\n\n"
@@ -69,5 +71,36 @@ func (m Model) View() string {
 		return helpStyle.Render(helpView)
 	}
 
-	return "\n" + m.list.View() + "\n\n" + subtleStyle.Render(" Press ? for help ")
+	switch m.currentPage {
+	case ListPage:
+		return "\n" + m.list.View() + "\n\n" + subtleStyle.Render(" Press ? for help, n for new task, r to refresh ")
+	case CreateTaskPage:
+		s := "\n" + titleStyle.Render("Create New Task") + "\n\n"
+
+		// Task content field
+		if m.focusedField == 0 {
+			s += focusedInputStyle.Render("Task: " + m.taskContent + "_") + "\n"
+		} else {
+			s += unfocusedInputStyle.Render("Task: " + m.taskContent) + "\n"
+		}
+
+		// Description field
+		if m.focusedField == 1 {
+			s += focusedInputStyle.Render("Description: " + m.taskDescription + "_") + "\n"
+		} else {
+			s += unfocusedInputStyle.Render("Description: " + m.taskDescription) + "\n"
+		}
+
+		// Due date field
+		if m.focusedField == 2 {
+			s += focusedInputStyle.Render("Due date: " + m.taskDueDate + "_") + "\n"
+		} else {
+			s += unfocusedInputStyle.Render("Due date: " + m.taskDueDate) + "\n"
+		}
+
+		s += "\n" + subtleStyle.Render(" Tab: Next field • Enter: Submit • Esc: Cancel ") + "\n"
+		return s
+	default:
+		return "Unknown page"
+	}
 }

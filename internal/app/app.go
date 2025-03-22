@@ -40,6 +40,31 @@ func completeTask(client *todoist.Client, id string) tea.Cmd {
 	}
 }
 
+func createTask(client *todoist.Client, msg ui.CreateTaskMsg) tea.Cmd {
+	return func() tea.Msg {
+		taskReq := todoist.CreateTaskRequest{
+			Content:     msg.Content,
+			Description: msg.Description,
+			DueDate:     msg.DueDate,
+		}
+
+		newTask, err := client.CreateTask(taskReq)
+		if err != nil {
+			// Handle error (in a real app, we'd return an error message)
+			return nil
+		}
+
+		// Return the created task to add it to the UI
+		return ui.TaskCreatedMsg{
+			Task: ui.Item{
+				ID:        newTask.Id,
+				Title:     newTask.Content,
+				Completed: newTask.Completed,
+			},
+		}
+	}
+}
+
 // Define a custom model that can handle CompleteTaskMsg
 type todoistModel struct {
 	baseModel ui.Model
@@ -55,6 +80,10 @@ func (m todoistModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case ui.CompleteTaskMsg:
 		return m, completeTask(m.client, msg.ID)
+	case ui.CreateTaskMsg:
+		return m, createTask(m.client, msg)
+	case ui.RefreshTasksMsg:
+		return m, fetchTasks(m.client)
 	default:
 		updatedModel, cmd := m.baseModel.Update(msg)
 		m.baseModel = updatedModel.(ui.Model)
@@ -66,19 +95,11 @@ func (m todoistModel) View() string {
 	return m.baseModel.View()
 }
 
-func (a *App) Run() error {
-	// Create our custom model that adds task completion functionality
-	customModel := todoistModel{
-		baseModel: a.model,
-		client:    a.client,
-	}
-
-	p := tea.NewProgram(customModel, tea.WithAltScreen())
-
-	go func() {
-		tasks, err := a.client.GetTasks()
+func fetchTasks(client *todoist.Client) tea.Cmd {
+	return func() tea.Msg {
+		tasks, err := client.GetTasks()
 		if err != nil {
-			return
+			return nil
 		}
 
 		var items []list.Item
@@ -92,7 +113,7 @@ func (a *App) Run() error {
 			}
 		}
 
-		l := list.New(items, ui.ItemDelegate{}, a.config.DefaultWidth, a.config.ListHeight)
+		l := list.New(items, ui.ItemDelegate{}, 20, 14) // Using hardcoded width and height for refresh
 		l.Title = "Todoist Tasks"
 		l.SetShowStatusBar(false)
 		l.SetFilteringEnabled(false)
@@ -115,6 +136,23 @@ func (a *App) Run() error {
 		l.SetShowHelp(true)
 		l.SetShowStatusBar(true)
 
+		return l
+	}
+}
+
+func (a *App) Run() error {
+	// Create our custom model that adds task completion functionality
+	customModel := todoistModel{
+		baseModel: a.model,
+		client:    a.client,
+	}
+
+	p := tea.NewProgram(customModel, tea.WithAltScreen())
+
+	go func() {
+		// Use fetchTasks to load initial tasks
+		cmd := fetchTasks(a.client)
+		l := cmd()
 		p.Send(l)
 	}()
 

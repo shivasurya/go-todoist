@@ -7,6 +7,7 @@ import (
 
 var (
 	TitleStyle         = lipgloss.NewStyle().MarginLeft(2)
+	titleStyle         = lipgloss.NewStyle().MarginLeft(2).Bold(true)
 	itemStyle          = lipgloss.NewStyle().PaddingLeft(4)
 	selectedItemStyle  = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.AdaptiveColor{Light: "#F72585", Dark: "#7209B7"})
 	PaginationStyle    = list.DefaultStyles().PaginationStyle.PaddingLeft(4)
@@ -17,4 +18,6 @@ var (
 	StatusMessageStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#04B575", Dark: "#04D483"}).Bold(true)
 	helpStyle          = lipgloss.NewStyle().Padding(1, 2).BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("63"))
 	subtleStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("250")).Italic(true)
+	focusedInputStyle  = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#F72585", Dark: "#7209B7"}).Bold(true)
+	unfocusedInputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 )

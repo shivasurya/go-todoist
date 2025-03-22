@@ -1,6 +1,7 @@
 package todoist
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -86,6 +87,54 @@ func (c *Client) CompleteTask(taskID string) error {
 	}
 
 	return nil
+}
+
+type CreateTaskRequest struct {
+	Content     string   `json:"content"`
+	ProjectID   string   `json:"project_id,omitempty"`
+	Description string   `json:"description,omitempty"`
+	DueDate     string   `json:"due_string,omitempty"`
+	LabelIDs    []string `json:"label_ids,omitempty"`
+	Priority    int      `json:"priority,omitempty"`
+}
+
+func (c *Client) CreateTask(task CreateTaskRequest) (*Task, error) {
+	url := c.resolveFeatureURL("tasks")
+
+	data, err := json.Marshal(task)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.config.Token)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var newTask Task
+	if err := json.Unmarshal(body, &newTask); err != nil {
+		return nil, err
+	}
+
+	return &newTask, nil
 }
 
 func (c *Client) resolveFeatureURL(feature string) string {
