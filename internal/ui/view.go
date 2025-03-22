@@ -62,6 +62,8 @@ func (m Model) View() string {
 		helpView += " • k/↑: Move cursor up\n"
 		helpView += " • c: Mark task as complete\n"
 		helpView += " • Space: Toggle task completion status\n"
+		helpView += " • ←/→: Navigate between days\n"
+		helpView += " • t: Show today's tasks\n"
 		helpView += " • n: Create new task\n"
 		helpView += " • r: Refresh tasks\n"
 		helpView += " • Enter: Select task\n"
@@ -73,7 +75,10 @@ func (m Model) View() string {
 
 	switch m.currentPage {
 	case ListPage:
-		return "\n" + m.list.View() + "\n\n" + subtleStyle.Render(" Press ? for help, n for new task, r to refresh ")
+		// Show current date in the view
+		dateTitle := "Tasks for " + m.CurrentDate.Format("Monday, January 2, 2006")
+		return "\n" + titleStyle.Render(dateTitle) + "\n" + m.list.View() + "\n\n" + 
+			subtleStyle.Render(" ←/→: Navigate days • t: Today's tasks • r: Refresh • n: New task • ?: Help ")
 	case CreateTaskPage:
 		s := "\n" + titleStyle.Render("Create New Task") + "\n\n"
 

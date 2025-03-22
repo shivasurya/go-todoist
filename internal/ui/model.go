@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -30,6 +32,12 @@ type CreateTaskMsg struct {
 
 type RefreshTasksMsg struct{}
 
+type ChangeTaskDateMsg struct {
+	Days int // positive for forward, negative for backward
+}
+
+type GoToTodayMsg struct{}
+
 type AppPage int
 
 const (
@@ -39,14 +47,17 @@ const (
 
 // KeyMap defines keybindings for the application
 type KeyMap struct {
-	Up       key.Binding
-	Down     key.Binding
-	Complete key.Binding
-	Toggle   key.Binding
-	Quit     key.Binding
-	New      key.Binding
-	Back     key.Binding
-	Refresh  key.Binding
+	Up           key.Binding
+	Down         key.Binding
+	Left         key.Binding
+	Right        key.Binding
+	Complete     key.Binding
+	Toggle       key.Binding
+	Quit         key.Binding
+	New          key.Binding
+	Back         key.Binding
+	Refresh      key.Binding
+	Today        key.Binding
 }
 
 // DefaultKeyMap returns a set of default keybindings
@@ -59,6 +70,14 @@ func DefaultKeyMap() KeyMap {
 		Down: key.NewBinding(
 			key.WithKeys("j", "down"),
 			key.WithHelp("↓/j", "move down"),
+		),
+		Left: key.NewBinding(
+			key.WithKeys("h", "left"),
+			key.WithHelp("←/h", "previous day"),
+		),
+		Right: key.NewBinding(
+			key.WithKeys("l", "right"),
+			key.WithHelp("→/l", "next day"),
 		),
 		Complete: key.NewBinding(
 			key.WithKeys("c"),
@@ -75,6 +94,10 @@ func DefaultKeyMap() KeyMap {
 		Refresh: key.NewBinding(
 			key.WithKeys("r"),
 			key.WithHelp("r", "refresh tasks"),
+		),
+		Today: key.NewBinding(
+			key.WithKeys("t"),
+			key.WithHelp("t", "today's tasks"),
 		),
 		Back: key.NewBinding(
 			key.WithKeys("esc"),
@@ -103,6 +126,7 @@ type Model struct {
 	taskDueDate     string
 	taskPriority    int
 	focusedField    int
+	CurrentDate     time.Time
 }
 
 func NewModel() Model {
@@ -118,6 +142,7 @@ func NewModel() Model {
 		currentPage: ListPage,
 		taskPriority: 1, // Default to normal priority (P4 in Todoist)
 		focusedField: 0,
+		CurrentDate: time.Now(),
 	}
 }
 
@@ -169,8 +194,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Toggle help view
 				m.showHelp = !m.showHelp
 				return m, nil
+			case "t":
+				// Go to today's tasks
+				m.loading = true
+				m.CurrentDate = time.Now()
+				return m, func() tea.Msg { return GoToTodayMsg{} }
+			case "left", "h":
+				// Go to previous day
+				m.loading = true
+				m.CurrentDate = m.CurrentDate.AddDate(0, 0, -1)
+				return m, func() tea.Msg { return ChangeTaskDateMsg{Days: -1} }
+			case "right", "l":
+				// Go to next day
+				m.loading = true
+				m.CurrentDate = m.CurrentDate.AddDate(0, 0, 1)
+				return m, func() tea.Msg { return ChangeTaskDateMsg{Days: 1} }
 			case "r":
-				// Refresh tasks
+				// Refresh tasks for current date
 				m.loading = true
 				return m, func() tea.Msg { return RefreshTasksMsg{} }
 			case "n":

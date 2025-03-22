@@ -92,7 +92,11 @@ func (m todoistModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ui.CreateTaskMsg:
 		return m, createTask(m.client, msg)
 	case ui.RefreshTasksMsg:
-		return m, fetchTasks(m.client)
+		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate)
+	case ui.ChangeTaskDateMsg:
+		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate)
+	case ui.GoToTodayMsg:
+		return m, fetchTasksForDate(m.client, time.Now())
 	default:
 		updatedModel, cmd := m.baseModel.Update(msg)
 		m.baseModel = updatedModel.(ui.Model)
@@ -104,7 +108,7 @@ func (m todoistModel) View() string {
 	return m.baseModel.View()
 }
 
-func fetchTasks(client *todoist.Client) tea.Cmd {
+func fetchTasksForDate(client *todoist.Client, date time.Time) tea.Cmd {
 	return func() tea.Msg {
 		tasks, err := client.GetTasks()
 		if err != nil {
@@ -112,8 +116,9 @@ func fetchTasks(client *todoist.Client) tea.Cmd {
 		}
 
 		var items []list.Item
+		targetDate := date.Format("2006-01-02")
 		for _, task := range tasks {
-			if task.Due.Date == time.Now().Format("2006-01-02") {
+			if task.Due.Date == targetDate {
 				items = append(items, ui.Item{
 					ID:        task.Id,
 					Title:     task.Content,
@@ -123,15 +128,14 @@ func fetchTasks(client *todoist.Client) tea.Cmd {
 		}
 
 		l := list.New(items, ui.ItemDelegate{}, 20, 14) // Using hardcoded width and height for refresh
-		l.Title = "Todoist Tasks"
 		l.SetShowStatusBar(false)
 		l.SetFilteringEnabled(false)
 		l.Styles.Title = ui.TitleStyle
 		l.Styles.PaginationStyle = ui.PaginationStyle
 		l.Styles.HelpStyle = ui.HelpStyle
+		l.Title = "" // Set empty title to avoid duplicate headings
 
 		// Set up the list view with task navigation and completion options
-		l.Title = "Todoist Tasks"
 		l.AdditionalFullHelpKeys = func() []key.Binding {
 			return []key.Binding{
 				key.NewBinding(
@@ -149,6 +153,11 @@ func fetchTasks(client *todoist.Client) tea.Cmd {
 	}
 }
 
+// Legacy function for backward compatibility
+func fetchTasks(client *todoist.Client) tea.Cmd {
+	return fetchTasksForDate(client, time.Now())
+}
+
 func (a *App) Run() error {
 	// Create our custom model that adds task completion functionality
 	customModel := todoistModel{
@@ -159,8 +168,8 @@ func (a *App) Run() error {
 	p := tea.NewProgram(customModel, tea.WithAltScreen())
 
 	go func() {
-		// Use fetchTasks to load initial tasks
-		cmd := fetchTasks(a.client)
+		// Use fetchTasksForDate to load today's tasks initially
+		cmd := fetchTasksForDate(a.client, time.Now())
 		l := cmd()
 		p.Send(l)
 	}()
