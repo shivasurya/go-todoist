@@ -153,11 +153,6 @@ func fetchTasksForDate(client *todoist.Client, date time.Time) tea.Cmd {
 	}
 }
 
-// Legacy function for backward compatibility
-func fetchTasks(client *todoist.Client) tea.Cmd {
-	return fetchTasksForDate(client, time.Now())
-}
-
 func (a *App) Run() error {
 	// Create our custom model that adds task completion functionality
 	customModel := todoistModel{

@@ -11,6 +11,7 @@ A delightful terminal-based Todoist client built with Go and the charming Bubble
 ## ✨ Features
 
 - 📋 List tasks and manage them from your terminal
+- 📅 Browse tasks by date with day-to-day navigation
 - ➕ Create new tasks with descriptions, due dates, and priority levels
 - ✓ Mark tasks as complete or toggle completion status
 - 🔄 Refresh task list to sync with Todoist
@@ -32,6 +33,8 @@ go install github.com/shivasurya/go-todoist/cmd/todoist@latest
 
 ### Task List Navigation
 - `j/k` or `↑/↓`: Navigate up and down through tasks
+- `h/l` or `←/→`: Navigate between previous/next day's tasks
+- `t`: Jump to today's tasks
 - `space`: Toggle task completion status
 - `c`: Mark task as complete
 - `n`: Create new task
