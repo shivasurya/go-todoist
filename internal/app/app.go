@@ -54,11 +54,11 @@ func createTask(client *todoist.Client, msg ui.CreateTaskMsg) tea.Cmd {
 		// Format due string using natural language input
 		// Combine date and time into a single due string
 		dueString := ""
-		
+
 		// If we have a date, start with that
 		if msg.DueDate != "" {
 			dueString = msg.DueDate
-			
+
 			// Add time if specified
 			if msg.DueTime != "" {
 				dueString += " at " + msg.DueTime
@@ -143,11 +143,13 @@ func (m todoistModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ui.CreateTaskMsg:
 		return m, createTask(m.client, msg)
 	case ui.RefreshTasksMsg:
-		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate)
+		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate, m.baseModel.ShowOverdue)
 	case ui.ChangeTaskDateMsg:
-		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate)
+		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate, m.baseModel.ShowOverdue)
 	case ui.GoToTodayMsg:
-		return m, fetchTasksForDate(m.client, time.Now())
+		return m, fetchTasksForDate(m.client, time.Now(), m.baseModel.ShowOverdue)
+	case ui.ToggleOverdueMsg:
+		return m, fetchTasksForDate(m.client, m.baseModel.CurrentDate, m.baseModel.ShowOverdue)
 	default:
 		updatedModel, cmd := m.baseModel.Update(msg)
 		m.baseModel = updatedModel.(ui.Model)
@@ -159,49 +161,63 @@ func (m todoistModel) View() string {
 	return m.baseModel.View()
 }
 
-func fetchTasksForDate(client *todoist.Client, date time.Time) tea.Cmd {
+func fetchTasksForDate(client *todoist.Client, date time.Time, showOverdue bool) tea.Cmd {
 	return func() tea.Msg {
-		tasks, err := client.GetTasks()
-		if err != nil {
-			return nil
+		// Format the date for the API query
+		targetDate := date.Format("2006-01-02")
+		var allTasks []todoist.Task
+
+		// Get either date tasks or overdue tasks based on filter
+		if showOverdue {
+			// Only show overdue tasks when filtered
+			overdueTasks, err := client.GetOverdueTasks()
+			if err != nil {
+				return nil
+			}
+			allTasks = overdueTasks
+		} else {
+			// Show regular date tasks
+			dateTasks, err := client.GetTasksByDate(targetDate)
+			if err != nil {
+				return nil
+			}
+			allTasks = dateTasks
 		}
 
+		// Convert tasks to UI items
 		var items []list.Item
-		targetDate := date.Format("2006-01-02")
-		for _, task := range tasks {
-			if task.Due.Date == targetDate {
-				// Extract time if present in the datetime string
-				dueTime := ""
-				if task.Due.Datetime != "" {
-					// If datetime is available, extract just the time portion
-					parts := strings.Split(task.Due.Datetime, "T")
-					if len(parts) > 1 {
-						// Extract time and remove seconds/timezone
-						timeOnly := strings.Split(parts[1], "+")
-						dueTime = strings.Split(timeOnly[0], ":")[0] + ":" + strings.Split(timeOnly[0], ":")[1]
-					}
+		for _, task := range allTasks {
+			// Extract time if present in the datetime string
+			dueTime := ""
+			if task.Due.Datetime != "" {
+				// If datetime is available, extract just the time portion
+				parts := strings.Split(task.Due.Datetime, "T")
+				if len(parts) > 1 {
+					// Extract time and remove seconds/timezone
+					timeOnly := strings.Split(parts[1], "+")
+					dueTime = strings.Split(timeOnly[0], ":")[0] + ":" + strings.Split(timeOnly[0], ":")[1]
 				}
-
-				// If we have a due string from the API, use it for display
-				dueDate := task.Due.Date
-				if task.Due.String != "" {
-					// Extract just the date part without time for consistent display
-					dateTimeParts := strings.Split(task.Due.String, " at ")
-					if len(dateTimeParts) > 0 {
-						dueDate = dateTimeParts[0]
-					}
-				}
-
-				items = append(items, ui.Item{
-					ID:          task.Id,
-					Title:       task.Content,
-					Completed:   task.Completed,
-					Priority:    task.Priority,
-					DueDate:     dueDate,
-					DueTime:     dueTime,
-					IsRecurring: task.Due.IsRecurring,
-				})
 			}
+
+			// If we have a due string from the API, use it for display
+			dueDate := task.Due.Date
+			if task.Due.String != "" {
+				// Extract just the date part without time for consistent display
+				dateTimeParts := strings.Split(task.Due.String, " at ")
+				if len(dateTimeParts) > 0 {
+					dueDate = dateTimeParts[0]
+				}
+			}
+
+			items = append(items, ui.Item{
+				ID:          task.Id,
+				Title:       task.Content,
+				Completed:   task.Completed,
+				Priority:    task.Priority,
+				DueDate:     dueDate,
+				DueTime:     dueTime,
+				IsRecurring: task.Due.IsRecurring,
+			})
 		}
 
 		l := list.New(items, ui.ItemDelegate{}, 20, 14) // Using hardcoded width and height for refresh
@@ -241,7 +257,7 @@ func (a *App) Run() error {
 
 	go func() {
 		// Use fetchTasksForDate to load today's tasks initially
-		cmd := fetchTasksForDate(a.client, time.Now())
+		cmd := fetchTasksForDate(a.client, time.Now(), false)
 		l := cmd()
 		p.Send(l)
 	}()

@@ -38,8 +38,12 @@ func (c *Client) GetProjects() ([]Project, error) {
 	return projects, nil
 }
 
-func (c *Client) GetTasks() ([]Task, error) {
-	body, err := c.makeGetRequest("tasks")
+func (c *Client) GetTasks(filter string) ([]Task, error) {
+	endpoint := "tasks"
+	if filter != "" {
+		endpoint += "?filter=" + filter
+	}
+	body, err := c.makeGetRequest(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +53,18 @@ func (c *Client) GetTasks() ([]Task, error) {
 		return nil, err
 	}
 	return tasks, nil
+}
+
+// GetOverdueTasks returns all overdue tasks
+func (c *Client) GetOverdueTasks() ([]Task, error) {
+	// Filter for overdue tasks
+	return c.GetTasks("overdue")
+}
+
+// GetTasksByDate returns non-completed tasks due on a specific date
+func (c *Client) GetTasksByDate(date string) ([]Task, error) {
+	// Filter for tasks due on specific date
+	return c.GetTasks("due:" + date)
 }
 
 func (c *Client) makeGetRequest(feature string) ([]byte, error) {

@@ -10,13 +10,13 @@ import (
 )
 
 type Item struct {
-	ID            string
-	Title         string
-	Completed     bool
-	Priority      int
-	DueDate       string
-	DueTime       string
-	IsRecurring   bool
+	ID          string
+	Title       string
+	Completed   bool
+	Priority    int
+	DueDate     string
+	DueTime     string
+	IsRecurring bool
 }
 
 type CompleteTaskMsg struct {
@@ -43,6 +43,8 @@ type ChangeTaskDateMsg struct {
 
 type GoToTodayMsg struct{}
 
+type ToggleOverdueMsg struct{}
+
 type AppPage int
 
 const (
@@ -52,17 +54,18 @@ const (
 
 // KeyMap defines keybindings for the application
 type KeyMap struct {
-	Up           key.Binding
-	Down         key.Binding
-	Left         key.Binding
-	Right        key.Binding
-	Complete     key.Binding
-	Toggle       key.Binding
-	Quit         key.Binding
-	New          key.Binding
-	Back         key.Binding
-	Refresh      key.Binding
-	Today        key.Binding
+	Up       key.Binding
+	Down     key.Binding
+	Left     key.Binding
+	Right    key.Binding
+	Complete key.Binding
+	Toggle   key.Binding
+	Quit     key.Binding
+	New      key.Binding
+	Back     key.Binding
+	Refresh  key.Binding
+	Today    key.Binding
+	Overdue  key.Binding
 }
 
 // DefaultKeyMap returns a set of default keybindings
@@ -104,6 +107,10 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("t"),
 			key.WithHelp("t", "today's tasks"),
 		),
+		Overdue: key.NewBinding(
+			key.WithKeys("o"),
+			key.WithHelp("o", "toggle overdue tasks"),
+		),
 		Back: key.NewBinding(
 			key.WithKeys("esc"),
 			key.WithHelp("esc", "back"),
@@ -133,6 +140,7 @@ type Model struct {
 	taskPriority    int
 	focusedField    int
 	CurrentDate     time.Time
+	ShowOverdue     bool
 }
 
 func NewModel() Model {
@@ -141,14 +149,14 @@ func NewModel() Model {
 	s.Style = spinnerStyle
 
 	return Model{
-		loading:     true,
-		spinner:     s,
-		keyMap:      DefaultKeyMap(),
-		showHelp:    false,
-		currentPage: ListPage,
+		loading:      true,
+		spinner:      s,
+		keyMap:       DefaultKeyMap(),
+		showHelp:     false,
+		currentPage:  ListPage,
 		taskPriority: 1, // Default to normal priority (P4 in Todoist)
 		focusedField: 0,
-		CurrentDate: time.Now(),
+		CurrentDate:  time.Now(),
 	}
 }
 
@@ -205,6 +213,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.loading = true
 				m.CurrentDate = time.Now()
 				return m, func() tea.Msg { return GoToTodayMsg{} }
+			case "o":
+				// Toggle overdue tasks visibility
+				m.ShowOverdue = !m.ShowOverdue
+				m.loading = true
+				return m, func() tea.Msg { return ToggleOverdueMsg{} }
 			case "left", "h":
 				// Go to previous day
 				m.loading = true
@@ -220,14 +233,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.loading = true
 				return m, func() tea.Msg { return RefreshTasksMsg{} }
 			case "n":
-			// Switch to create task page
-			m.currentPage = CreateTaskPage
-			m.taskContent = ""
-			m.taskDescription = ""
-			m.taskDueDate = ""
-			m.taskDueTime = ""
-			m.focusedField = 0 // Focus on the first field
-			return m, nil
+				// Switch to create task page
+				m.currentPage = CreateTaskPage
+				m.taskContent = ""
+				m.taskDescription = ""
+				m.taskDueDate = ""
+				m.taskDueTime = ""
+				m.focusedField = 0 // Focus on the first field
+				return m, nil
 			case "enter":
 				if i, ok := m.list.SelectedItem().(Item); ok {
 					m.choice = i.Title
