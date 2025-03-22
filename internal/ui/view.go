@@ -98,6 +98,14 @@ func (m Model) View() string {
 			s += unfocusedInputStyle.Render("Due date: " + m.taskDueDate) + "\n"
 		}
 
+		// Priority field - show priority levels from P1 (normal) to P4 (urgent)
+		priorityLabels := map[int]string{1: "P1 (normal)", 2: "P2 (medium)", 3: "P3 (high)", 4: "P4 (urgent)"}
+		if m.focusedField == 3 {
+			s += focusedInputStyle.Render("Priority: " + priorityLabels[m.taskPriority] + " [press any key to cycle]") + "\n"
+		} else {
+			s += unfocusedInputStyle.Render("Priority: " + priorityLabels[m.taskPriority]) + "\n"
+		}
+
 		s += "\n" + subtleStyle.Render(" Tab: Next field • Enter: Submit • Esc: Cancel ") + "\n"
 		return s
 	default:

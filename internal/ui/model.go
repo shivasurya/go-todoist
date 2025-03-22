@@ -25,6 +25,7 @@ type CreateTaskMsg struct {
 	Content     string
 	Description string
 	DueDate     string
+	Priority    int
 }
 
 type RefreshTasksMsg struct{}
@@ -100,6 +101,7 @@ type Model struct {
 	taskContent    string
 	taskDescription string
 	taskDueDate     string
+	taskPriority    int
 	focusedField    int
 }
 
@@ -114,6 +116,7 @@ func NewModel() Model {
 		keyMap:      DefaultKeyMap(),
 		showHelp:    false,
 		currentPage: ListPage,
+		taskPriority: 1, // Default to normal priority (P4 in Todoist)
 		focusedField: 0,
 	}
 }
@@ -220,17 +223,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							Content:     m.taskContent,
 							Description: m.taskDescription,
 							DueDate:     m.taskDueDate,
+							Priority:    m.taskPriority,
 						}
 					}
 				}
 				return m, nil
 			case "tab":
 				// Move to next field
-				m.focusedField = (m.focusedField + 1) % 3
+				m.focusedField = (m.focusedField + 1) % 4
 				return m, nil
 			case "shift+tab":
 				// Move to previous field
-				m.focusedField = (m.focusedField - 1 + 3) % 3
+				m.focusedField = (m.focusedField - 1 + 4) % 4
 				return m, nil
 			case "backspace":
 				// Handle backspace for the focused field
@@ -247,6 +251,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if len(m.taskDueDate) > 0 {
 						m.taskDueDate = m.taskDueDate[:len(m.taskDueDate)-1]
 					}
+				case 3:
+					// Cycle through priority levels when backspace is pressed
+					m.taskPriority = (m.taskPriority % 4) + 1
 				}
 				return m, nil
 			default:
@@ -259,6 +266,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.taskDescription += msg.String()
 					case 2:
 						m.taskDueDate += msg.String()
+					case 3:
+						// For priority field, we cycle through values with any key press
+						m.taskPriority = (m.taskPriority % 4) + 1
 					}
 				}
 				return m, nil

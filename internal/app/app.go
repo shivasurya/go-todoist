@@ -42,10 +42,19 @@ func completeTask(client *todoist.Client, id string) tea.Cmd {
 
 func createTask(client *todoist.Client, msg ui.CreateTaskMsg) tea.Cmd {
 	return func() tea.Msg {
+		// Todoist uses priorities 1-4 where:
+		// P1 = normal (1)
+		// P2 = medium (2)
+		// P3 = high (3)
+		// P4 = urgent (4)
+		// But we need to reverse the mapping since the UI selection is inverted
+		todoistPriority := 5 - msg.Priority
+
 		taskReq := todoist.CreateTaskRequest{
 			Content:     msg.Content,
 			Description: msg.Description,
 			DueDate:     msg.DueDate,
+			Priority:    todoistPriority,
 		}
 
 		newTask, err := client.CreateTask(taskReq)

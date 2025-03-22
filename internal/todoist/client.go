@@ -121,7 +121,9 @@ func (c *Client) CreateTask(task CreateTaskRequest) (*Task, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("server returned status code %d", resp.StatusCode)
+		// Read the response body to get more details on the error
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("server returned status code %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	body, err := io.ReadAll(resp.Body)

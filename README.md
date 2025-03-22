@@ -10,12 +10,13 @@ A delightful terminal-based Todoist client built with Go and the charming Bubble
 
 ## ✨ Features
 
-- 📋 List tasks
-- ➕ Create new tasks
-- ✓ Mark tasks as complete
-- 🔄 Refresh task list
-- 🎨 Beautiful terminal UI
-- ⌨️ Keyboard-driven interface
+- 📋 List tasks and manage them from your terminal
+- ➕ Create new tasks with descriptions, due dates, and priority levels
+- ✓ Mark tasks as complete or toggle completion status
+- 🔄 Refresh task list to sync with Todoist
+- 📆 Assign priority levels (P1-P4) to your tasks
+- 🎨 Beautiful terminal UI with intuitive navigation
+- ⌨️ Fully keyboard-driven interface
 
 ## 🚀 Installation
 
@@ -28,16 +29,26 @@ go install github.com/shivasurya/go-todoist/cmd/todoist@latest
 `todoist` should be available in your $GOPATH/bin directory.
 
 2. Navigate using these keyboard shortcuts:
-- `j/k` or `↑/↓`: Navigate tasks
+
+### Task List Navigation
+- `j/k` or `↑/↓`: Navigate up and down through tasks
 - `space`: Toggle task completion status
 - `c`: Mark task as complete
 - `n`: Create new task
-- `r`: Refresh tasks
-- `Enter`: Select task
-- `Tab/Shift+Tab`: Navigate form fields (in task creation)
-- `Esc`: Go back (from task creation)
+- `r`: Refresh tasks list from Todoist
+- `Enter`: Select currently highlighted task
 - `?`: Toggle help menu
 - `q` or `Ctrl+C`: Quit application
+
+### Task Creation
+- `Tab/Shift+Tab`: Navigate between task fields (Title, Description, Due Date, Priority)
+- Any key: Cycle through priority levels when the priority field is selected:
+  - P1: Normal priority (default)
+  - P2: Medium priority
+  - P3: High priority
+  - P4: Urgent priority
+- `Enter`: Submit and create the task
+- `Esc`: Cancel and return to task list
 
 ## 🛠️ Development
 
@@ -47,10 +58,22 @@ Requirements:
 
 Build from source:
 
-- git clone https://github.com/shivasurya/go-todoist
-- cd todoist-tui
-- export TODOIST_TOKEN=your_api_key
-- go build -o todo cmd/todoist/main.go
+```bash
+# Clone the repository
+git clone https://github.com/shivasurya/go-todoist
+
+# Navigate to the project directory
+cd go-todoist
+
+# Set your Todoist API token
+export TODOIST_TOKEN=your_api_key
+
+# Build the application
+go build -o todoist cmd/todoist/main.go
+
+# Run it
+./todoist
+```
 
 Ensure you have a valid Todoist API key in your environment variable as TODOIST_TOKEN.
 
