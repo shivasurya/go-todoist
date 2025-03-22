@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -50,10 +51,27 @@ func createTask(client *todoist.Client, msg ui.CreateTaskMsg) tea.Cmd {
 		// But we need to reverse the mapping since the UI selection is inverted
 		todoistPriority := 5 - msg.Priority
 
+		// Format due string using natural language input
+		// Combine date and time into a single due string
+		dueString := ""
+		
+		// If we have a date, start with that
+		if msg.DueDate != "" {
+			dueString = msg.DueDate
+			
+			// Add time if specified
+			if msg.DueTime != "" {
+				dueString += " at " + msg.DueTime
+			}
+		} else if msg.DueTime != "" {
+			// If only time specified, assume it's today
+			dueString = "today at " + msg.DueTime
+		}
+
 		taskReq := todoist.CreateTaskRequest{
 			Content:     msg.Content,
 			Description: msg.Description,
-			DueDate:     msg.DueDate,
+			DueString:   dueString,
 			Priority:    todoistPriority,
 		}
 
@@ -63,12 +81,45 @@ func createTask(client *todoist.Client, msg ui.CreateTaskMsg) tea.Cmd {
 			return nil
 		}
 
+		// Determine if this is a recurring task based on the response
+		isRecurring := false
+		if newTask.Due.IsRecurring {
+			isRecurring = true
+		}
+
+		// Extract time if present in the datetime string
+		dueTime := ""
+		if newTask.Due.Datetime != "" {
+			// If datetime is available, try to extract just the time portion
+			// This is simplified - in a real app you would parse the datetime properly
+			parts := strings.Split(newTask.Due.Datetime, "T")
+			if len(parts) > 1 {
+				// Extract time and remove seconds/timezone
+				timeOnly := strings.Split(parts[1], "+")
+				dueTime = strings.Split(timeOnly[0], ":")[0] + ":" + strings.Split(timeOnly[0], ":")[1]
+			}
+		}
+
+		// Format the due date for display
+		dueDate := newTask.Due.Date
+		if newTask.Due.String != "" {
+			// Extract just the date part without time for consistent display
+			dateTimeParts := strings.Split(newTask.Due.String, " at ")
+			if len(dateTimeParts) > 0 {
+				dueDate = dateTimeParts[0]
+			}
+		}
+
 		// Return the created task to add it to the UI
 		return ui.TaskCreatedMsg{
 			Task: ui.Item{
-				ID:        newTask.Id,
-				Title:     newTask.Content,
-				Completed: newTask.Completed,
+				ID:          newTask.Id,
+				Title:       newTask.Content,
+				Completed:   newTask.Completed,
+				Priority:    todoistPriority,
+				DueDate:     dueDate,
+				DueTime:     dueTime,
+				IsRecurring: isRecurring,
 			},
 		}
 	}
@@ -119,10 +170,36 @@ func fetchTasksForDate(client *todoist.Client, date time.Time) tea.Cmd {
 		targetDate := date.Format("2006-01-02")
 		for _, task := range tasks {
 			if task.Due.Date == targetDate {
+				// Extract time if present in the datetime string
+				dueTime := ""
+				if task.Due.Datetime != "" {
+					// If datetime is available, extract just the time portion
+					parts := strings.Split(task.Due.Datetime, "T")
+					if len(parts) > 1 {
+						// Extract time and remove seconds/timezone
+						timeOnly := strings.Split(parts[1], "+")
+						dueTime = strings.Split(timeOnly[0], ":")[0] + ":" + strings.Split(timeOnly[0], ":")[1]
+					}
+				}
+
+				// If we have a due string from the API, use it for display
+				dueDate := task.Due.Date
+				if task.Due.String != "" {
+					// Extract just the date part without time for consistent display
+					dateTimeParts := strings.Split(task.Due.String, " at ")
+					if len(dateTimeParts) > 0 {
+						dueDate = dateTimeParts[0]
+					}
+				}
+
 				items = append(items, ui.Item{
-					ID:        task.Id,
-					Title:     task.Content,
-					Completed: task.Completed,
+					ID:          task.Id,
+					Title:       task.Content,
+					Completed:   task.Completed,
+					Priority:    task.Priority,
+					DueDate:     dueDate,
+					DueTime:     dueTime,
+					IsRecurring: task.Due.IsRecurring,
 				})
 			}
 		}

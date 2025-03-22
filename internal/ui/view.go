@@ -29,7 +29,37 @@ func (d ItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 		return
 	}
 
-	str := fmt.Sprintf("%d. %s", index+1, item.Title)
+	// Priority indicators: P1 (normal), P2 (medium), P3 (high), P4 (urgent)
+	priority := ""
+	switch item.Priority {
+	case 1:
+		priority = "" // normal priority doesn't need an indicator
+	case 2:
+		priority = "[P2] " // medium priority
+	case 3:
+		priority = "[P3] " // high priority
+	case 4:
+		priority = "[P4] " // urgent priority
+	}
+
+	// Create the basic task string with priority
+	str := fmt.Sprintf("%d. %s%s", index+1, priority, item.Title)
+
+	// Add due date/time if available
+	if item.DueDate != "" {
+		// If we have a formatted due string with time, use that
+		dueStr := item.DueDate
+		if item.DueTime != "" {
+			dueStr += " " + item.DueTime
+		}
+		
+		// Add recurring indicator if task is recurring
+		if item.IsRecurring {
+			dueStr += " ↻" // Using a recycling symbol to indicate recurring
+		}
+		
+		str += " " + dueStyle.Render(dueStr)
+	}
 
 	if item.Completed {
 		str = strikedStyle.Render(str)
@@ -99,13 +129,24 @@ func (m Model) View() string {
 		// Due date field
 		if m.focusedField == 2 {
 			s += focusedInputStyle.Render("Due date: " + m.taskDueDate + "_") + "\n"
+			s += subtleStyle.Render("  examples: tomorrow, next Monday, 2023-12-25") + "\n"
 		} else {
 			s += unfocusedInputStyle.Render("Due date: " + m.taskDueDate) + "\n"
 		}
 
+		// Due time field
+		if m.focusedField == 3 {
+			s += focusedInputStyle.Render("Due time: " + m.taskDueTime + "_") + "\n"
+			s += subtleStyle.Render("  examples: 9am, 14:30, morning, evening") + "\n"
+		} else {
+			s += unfocusedInputStyle.Render("Due time: " + m.taskDueTime) + "\n"
+		}
+
+
+
 		// Priority field - show priority levels from P1 (normal) to P4 (urgent)
 		priorityLabels := map[int]string{1: "P1 (normal)", 2: "P2 (medium)", 3: "P3 (high)", 4: "P4 (urgent)"}
-		if m.focusedField == 3 {
+		if m.focusedField == 4 {
 			s += focusedInputStyle.Render("Priority: " + priorityLabels[m.taskPriority] + " [press any key to cycle]") + "\n"
 		} else {
 			s += unfocusedInputStyle.Render("Priority: " + priorityLabels[m.taskPriority]) + "\n"

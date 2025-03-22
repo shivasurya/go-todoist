@@ -20,4 +20,5 @@ var (
 	subtleStyle        = lipgloss.NewStyle().Foreground(lipgloss.Color("250")).Italic(true)
 	focusedInputStyle  = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#F72585", Dark: "#7209B7"}).Bold(true)
 	unfocusedInputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	dueStyle           = lipgloss.NewStyle().Foreground(lipgloss.Color("110")).Italic(true)
 )

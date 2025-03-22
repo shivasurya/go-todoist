@@ -12,7 +12,9 @@ A delightful terminal-based Todoist client built with Go and the charming Bubble
 
 - 📋 List tasks and manage them from your terminal
 - 📅 Browse tasks by date with day-to-day navigation
-- ➕ Create new tasks with descriptions, due dates, and priority levels
+- ➕ Create new tasks with descriptions, due dates, times, and priority levels
+- 🔁 Support for recurring tasks (daily, weekly, monthly, etc.)
+- ⏰ Add specific times to your tasks
 - ✓ Mark tasks as complete or toggle completion status
 - 🔄 Refresh task list to sync with Todoist
 - 📆 Assign priority levels (P1-P4) to your tasks
@@ -44,12 +46,14 @@ go install github.com/shivasurya/go-todoist/cmd/todoist@latest
 - `q` or `Ctrl+C`: Quit application
 
 ### Task Creation
-- `Tab/Shift+Tab`: Navigate between task fields (Title, Description, Due Date, Priority)
+- `Tab/Shift+Tab`: Navigate between task fields (Title, Description, Due Date, Due Time, Priority)
 - Any key: Cycle through priority levels when the priority field is selected:
   - P1: Normal priority (default)
   - P2: Medium priority
   - P3: High priority
   - P4: Urgent priority
+- Due date field: Enter dates using natural language (e.g., `tomorrow`, `next Monday`, `Dec 25`)
+- Due time field: Enter time using natural language (e.g., `9am`, `2pm`, `morning`, `evening`)
 - `Enter`: Submit and create the task
 - `Esc`: Cancel and return to task list
 

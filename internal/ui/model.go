@@ -10,9 +10,13 @@ import (
 )
 
 type Item struct {
-	ID        string
-	Title     string
-	Completed bool
+	ID            string
+	Title         string
+	Completed     bool
+	Priority      int
+	DueDate       string
+	DueTime       string
+	IsRecurring   bool
 }
 
 type CompleteTaskMsg struct {
@@ -27,6 +31,7 @@ type CreateTaskMsg struct {
 	Content     string
 	Description string
 	DueDate     string
+	DueTime     string
 	Priority    int
 }
 
@@ -113,17 +118,18 @@ func DefaultKeyMap() KeyMap {
 func (i Item) FilterValue() string { return i.Title }
 
 type Model struct {
-	list           list.Model
-	choice         string
-	quitting       bool
-	loading        bool
-	spinner        spinner.Model
-	keyMap         KeyMap
-	showHelp       bool
-	currentPage    AppPage
-	taskContent    string
+	list            list.Model
+	choice          string
+	quitting        bool
+	loading         bool
+	spinner         spinner.Model
+	keyMap          KeyMap
+	showHelp        bool
+	currentPage     AppPage
+	taskContent     string
 	taskDescription string
 	taskDueDate     string
+	taskDueTime     string
 	taskPriority    int
 	focusedField    int
 	CurrentDate     time.Time
@@ -214,13 +220,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.loading = true
 				return m, func() tea.Msg { return RefreshTasksMsg{} }
 			case "n":
-				// Switch to create task page
-				m.currentPage = CreateTaskPage
-				m.taskContent = ""
-				m.taskDescription = ""
-				m.taskDueDate = ""
-				m.focusedField = 0 // Focus on the first field
-				return m, nil
+			// Switch to create task page
+			m.currentPage = CreateTaskPage
+			m.taskContent = ""
+			m.taskDescription = ""
+			m.taskDueDate = ""
+			m.taskDueTime = ""
+			m.focusedField = 0 // Focus on the first field
+			return m, nil
 			case "enter":
 				if i, ok := m.list.SelectedItem().(Item); ok {
 					m.choice = i.Title
@@ -263,18 +270,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							Content:     m.taskContent,
 							Description: m.taskDescription,
 							DueDate:     m.taskDueDate,
+							DueTime:     m.taskDueTime,
 							Priority:    m.taskPriority,
 						}
 					}
 				}
 				return m, nil
 			case "tab":
-				// Move to next field
-				m.focusedField = (m.focusedField + 1) % 4
+				// Move to next field (5 fields: content, description, date, time, priority)
+				m.focusedField = (m.focusedField + 1) % 5
 				return m, nil
 			case "shift+tab":
 				// Move to previous field
-				m.focusedField = (m.focusedField - 1 + 4) % 4
+				m.focusedField = (m.focusedField - 1 + 5) % 5
 				return m, nil
 			case "backspace":
 				// Handle backspace for the focused field
@@ -292,6 +300,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.taskDueDate = m.taskDueDate[:len(m.taskDueDate)-1]
 					}
 				case 3:
+					if len(m.taskDueTime) > 0 {
+						m.taskDueTime = m.taskDueTime[:len(m.taskDueTime)-1]
+					}
+				case 4:
 					// Cycle through priority levels when backspace is pressed
 					m.taskPriority = (m.taskPriority % 4) + 1
 				}
@@ -307,6 +319,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					case 2:
 						m.taskDueDate += msg.String()
 					case 3:
+						m.taskDueTime += msg.String()
+					case 4:
 						// For priority field, we cycle through values with any key press
 						m.taskPriority = (m.taskPriority % 4) + 1
 					}

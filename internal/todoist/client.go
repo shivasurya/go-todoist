@@ -93,7 +93,8 @@ type CreateTaskRequest struct {
 	Content     string   `json:"content"`
 	ProjectID   string   `json:"project_id,omitempty"`
 	Description string   `json:"description,omitempty"`
-	DueDate     string   `json:"due_string,omitempty"`
+	DueString   string   `json:"due_string,omitempty"`
+	Labels      []string `json:"labels,omitempty"`
 	LabelIDs    []string `json:"label_ids,omitempty"`
 	Priority    int      `json:"priority,omitempty"`
 }

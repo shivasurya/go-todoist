@@ -23,11 +23,16 @@ type Task struct {
 	Content      string    `json:"content"`
 	Description  string    `json:"description"`
 	Completed    bool      `json:"completed"`
+	Labels       []string  `json:"labels"`
 	LabelIds     []string  `json:"label_ids"`
 	Priority     int       `json:"priority"`
 	CommentCount int       `json:"comment_count"`
 	CreatedAt    time.Time `json:"created_at"`
 	Due          struct {
-		Date string `json:"date"`
+		Date        string `json:"date"`
+		Datetime    string `json:"datetime"`
+		String      string `json:"string"`
+		IsRecurring bool   `json:"is_recurring"`
+		Timezone    string `json:"timezone,omitempty"`
 	} `json:"due"`
 }
