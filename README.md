@@ -11,6 +11,9 @@ A delightful terminal-based Todoist client built with Go and the charming Bubble
 ## ✨ Features
 
 - 📋 List tasks
+- ➕ Create new tasks
+- ✓ Mark tasks as complete
+- 🔄 Refresh task list
 - 🎨 Beautiful terminal UI
 - ⌨️ Keyboard-driven interface
 
@@ -28,8 +31,13 @@ go install github.com/shivasurya/go-todoist/cmd/todoist@latest
 - `j/k` or `↑/↓`: Navigate tasks
 - `space`: Toggle task completion status
 - `c`: Mark task as complete
-- `?`: Show help menu
-- `q`: Quit application
+- `n`: Create new task
+- `r`: Refresh tasks
+- `Enter`: Select task
+- `Tab/Shift+Tab`: Navigate form fields (in task creation)
+- `Esc`: Go back (from task creation)
+- `?`: Toggle help menu
+- `q` or `Ctrl+C`: Quit application
 
 ## 🛠️ Development
 
